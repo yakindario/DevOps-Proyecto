@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-deployment
+  labels:
+    app: web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+        - name: web
+          image: yakindario/api-react:v1
+          ports:
+            - containerPort: 5173
+          env:
+            - name: VITE_HOST
+              value: "0.0.0.0"
+            - name: VITE_PORT
+              value: "5173"
