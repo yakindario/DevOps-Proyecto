@@ -1,0 +1,13 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: yakindario-tls
+  namespace: default
+spec:
+  secretName: yakindario-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  commonName: yakindario.me
+  dnsNames:
+    - yakindario.me
