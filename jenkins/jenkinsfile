@@ -1,0 +1,85 @@
+pipeline {
+    agent any
+    environment {
+        VERSION='v2'
+        SERVER='yakin@192.168.1.239'
+    }
+    stages {
+        stage('Download repositorio') {
+            steps {
+                sh 'rm -rf DevOps-Proyecto' 
+                sh '''
+                echo 'Downloading repository...'
+                git clone 'https://github.com/yakindario/DevOps-Proyecto.git'
+                '''
+            }
+        }
+        
+            stage('Build Web react+Vite') {
+                steps {
+                    sh '''
+                    echo 'Building...'
+                    cd DevOps-Proyecto/web && docker build -t api-react:$VERSION .
+                    '''
+                }
+            }
+            stage('Build Api Flask') {
+                steps {
+                    sh '''
+                    echo 'Building...'
+                    cd DevOps-Proyecto/api && docker build -t api-flask:$VERSION .
+                     '''
+                }
+            }
+        stage('Deploy hub.docker') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'docker', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                sh '''
+                    echo 'Deploying...'
+                    echo $PASSWORD | docker login -u $USERNAME --password-stdin
+                    docker tag api-flask:$VERSION yakindario/api-flask:$VERSION
+                    docker push yakindario/api-flask:$VERSION
+                    docker tag api-react:$VERSION  yakindario/api-react:$VERSION
+                    docker push yakindario/api-react:$VERSION
+                    '''
+                }
+            }
+        }
+        stage('Acutalizar k8s') {
+            steps {
+                script {
+                    sshagent(['yakin']) {
+                        sh '''
+                        echo 'Replacing Kubernetes Deployment image versions...'
+                        ssh yakin@192.168.1.239 "
+                            cd DevOps-Proyecto/Kubernetes &&
+                            sed -i -- 's/image: yakindario\\/api-flask:v1/image: yakindario\\/api-flask:$VERSION/g' Deployment-flask.yml &&
+                            sed -i -- 's/image: yakindario\\/api-react:v1/image: yakindario\\/api-react:$VERSION/g' Deployment-react.yml
+                        "
+                        '''
+                    }
+                }
+            }
+        }
+        stage('Apply Kubernetes Manifests') {
+            steps {
+                script {
+                    sshagent(['yakin']) {
+                        sh '''
+                        echo 'Applying Kubernetes manifests...'
+                        ssh yakin@192.168.1.239 "
+                            kubectl apply -f DevOps-Proyecto/Kubernetes/Deployment-flask.yml &&
+                            kubectl apply -f DevOps-Proyecto/Kubernetes/Deployment-react.yml &&
+                            kubectl apply -f DevOps-Proyecto/Kubernetes/Service-flask.yml &&
+                            kubectl apply -f DevOps-Proyecto/Kubernetes/Service-react.yml &&
+                            kubectl apply -f DevOps-Proyecto/Kubernetes/Ingress.yml &&
+                            kubectl apply -f DevOps-Proyecto/Kubernetes/letsencrypt-issuer.yaml &&
+                            kubectl apply -f DevOps-Proyecto/Kubernetes/yakindario-tls-certificate.yaml
+                        "
+                        '''
+                    }
+                }
+            }
+         }
+    }
+}
