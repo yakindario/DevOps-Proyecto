@@ -17,3 +17,12 @@ Para la construcción de la imagen Docker. Jenkis ejecutará el pipeline para co
 - Kubernetes gestiona la implementación y el escalado de la aplicación en el clúster. Extrae la imagen Docker desde Docker Hub y la despliega en los nodos del clúster. Jenkis utiliza herramientas de  kubernetes para aplicar las configuraciones de despliegue. Esto incluye la creación o actualización de los pods, servicios y otros recursos en los cluster de kubernetes.
 
 - Finalmente el cluster de kubernetes está alojado en DigitalOcean una plataforma de la nube que proporciona infraestructura escalable y de alto rendimiento.
+
+### Proyecto Final Avatares devops
+El proeycto relizado fue por Bootcamp CodigoFacilito por el proyecto final de [Avatares-DevOps](https://gitlab.com/training-devops-cf/avatares-devops). 
+
+Ingresa a la siguiente pagina [yakindario.me](yakindario.me)
+
+Proyecto final 
+
+![Avatares](/doc/Captura.png)
